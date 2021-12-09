@@ -10,7 +10,7 @@ export async function saveRecommendation(name: string, youtubeLink: string) {
   }
 
   const initialScore = 0;
-  return await recommendationRepository.create(name, youtubeLink, initialScore);
+  return await recommendationRepository.create({ name, youtubeLink, score: initialScore });
 }
 
 export async function upvoteRecommendation(id: number) {
@@ -33,23 +33,15 @@ export async function getRandomRecommendation() {
   const orderBy = "RANDOM()";
 
   if (random > 0.7) {
-    recommendations = await recommendationRepository.findRecommendations(
-      -5,
-      10,
-      orderBy
-    );
+    recommendations = await recommendationRepository.findRecommendations({ minScore: -5, maxScore: 10, orderBy});
   } else {
-    recommendations = await recommendationRepository.findRecommendations(
-      11,
-      Infinity,
-      orderBy
-    );
+    recommendations = await recommendationRepository.findRecommendations({ minScore: 11, maxScore: Infinity, orderBy});
   }
 
   return recommendations[0];
 }
 
 async function changeRecommendationScore(id: number, increment: number) {
-  const result = await recommendationRepository.incrementScore(id, increment);
+  const result = await recommendationRepository.incrementScore({ id, increment });
   return result.rowCount === 0 ? null : result;
 }

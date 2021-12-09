@@ -1,6 +1,27 @@
 import connection from "../database";
 
-export async function create(name: string, youtubeLink: string, score: number) {
+interface CreateRecommendation {
+  name: string,
+  youtubeLink: string,
+  score: number,
+}
+
+interface Recommendations extends CreateRecommendation {
+  id: number,
+}
+
+interface UpdateRecommendation {
+  id: number,
+  increment: number,
+}
+
+interface FindRecommendations {
+  minScore: number,
+  maxScore: number,
+  orderBy: string,
+}
+
+export async function create({ name, youtubeLink, score }: CreateRecommendation) {
   await connection.query(
     `
     INSERT INTO recommendations
@@ -12,7 +33,7 @@ export async function create(name: string, youtubeLink: string, score: number) {
   );
 }
 
-export async function findById(id: number) {
+export async function findById(id: number): Promise<Recommendations> {
   const result = await connection.query(
     `
     SELECT * FROM recommendations WHERE id = $1
@@ -23,7 +44,7 @@ export async function findById(id: number) {
   return result.rows[0];
 }
 
-export async function incrementScore(id: number, increment: number) {
+export async function incrementScore({ increment, id }: UpdateRecommendation) {
   return await connection.query(
     `
     UPDATE recommendations SET score = score + $1 WHERE id = $2
@@ -41,11 +62,7 @@ export async function destroy(id: number) {
   );
 }
 
-export async function findRecommendations(
-  minScore: number,
-  maxScore: number = Infinity,
-  orderBy: string = ""
-) {
+export async function findRecommendations({ minScore, maxScore = Infinity, orderBy = "" }: FindRecommendations): Promise<Recommendations[]> {
   let where = "";
   let params = [minScore];
 
